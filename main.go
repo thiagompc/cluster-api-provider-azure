@@ -471,55 +471,57 @@ func registerControllers(ctx context.Context, mgr manager.Manager) {
 	}
 }
 
+func handleErrLog(err error, msg string, key string, context string) {
+	setupLog.Error(err, msg, key, context)
+	os.Exit(1)
+}
+
 func registerWebhooks(mgr manager.Manager) {
+	var errMsg = "unable to create webhook"
+	var key = "webhook"
 	if err := (&infrav1beta1.AzureCluster{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "AzureCluster")
-		os.Exit(1)
+		handleErrLog(err, errMsg, key, "AzureCluster")
 	}
 
 	if err := (&infrav1beta1.AzureClusterTemplate{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "AzureClusterTemplate")
-		os.Exit(1)
+		handleErrLog(err, errMsg, key, "AzureClusterTemplate")
 	}
 
 	if err := (&infrav1beta1.AzureMachine{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "AzureMachine")
-		os.Exit(1)
+		handleErrLog(err, errMsg, key, "AzureMachine")
 	}
 
 	if err := (&infrav1beta1.AzureMachineTemplate{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "AzureMachineTemplate")
-		os.Exit(1)
+		handleErrLog(err, errMsg, key, "AzureMachineTemplate")
 	}
 
 	if err := (&infrav1beta1.AzureClusterIdentity{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "AzureClusterIdentity")
-		os.Exit(1)
+		handleErrLog(err, errMsg, key, "AzureClusterIdentity")
 	}
 	// just use CAPI MachinePool feature flag rather than create a new one
 	if feature.Gates.Enabled(capifeature.MachinePool) {
 		if err := (&infrav1beta1exp.AzureMachinePool{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "AzureMachinePool")
-			os.Exit(1)
+			handleErrLog(err, errMsg, key, "AzureMachinePool")
+
 		}
 
 		if err := (&infrav1beta1exp.AzureMachinePoolMachine{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "AzureMachinePoolMachine")
-			os.Exit(1)
+			handleErrLog(err, errMsg, key, "AzureMachinePoolMachine")
+
 		}
 	}
 
 	if feature.Gates.Enabled(feature.AKS) {
 		if err := (&infrav1beta1exp.AzureManagedCluster{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "AzureManagedCluster")
-			os.Exit(1)
+			handleErrLog(err, errMsg, key, "AzureManagedCluster")
+
 		}
 	}
 
 	if feature.Gates.Enabled(feature.AKS) {
 		if err := (&infrav1beta1exp.AzureManagedControlPlane{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "AzureManagedControlPlane")
-			os.Exit(1)
+			handleErrLog(err, errMsg, key, "AzureManagedControlPlane")
+
 		}
 	}
 
@@ -534,12 +536,10 @@ func registerWebhooks(mgr manager.Manager) {
 	}
 
 	if err := mgr.AddReadyzCheck("webhook", mgr.GetWebhookServer().StartedChecker()); err != nil {
-		setupLog.Error(err, "unable to create ready check")
-		os.Exit(1)
+		handleErrLog(err, "unable to create ready check", "", "")
 	}
 
 	if err := mgr.AddHealthzCheck("webhook", mgr.GetWebhookServer().StartedChecker()); err != nil {
-		setupLog.Error(err, "unable to create health check")
-		os.Exit(1)
+		handleErrLog(err, "unable to create health check", "", "")
 	}
 }
